@@ -1,7 +1,24 @@
 """Fábrica da API REST (Backend da Arquitetura Cliente-Servidor)."""
 
 import os
+import sys
+import types
+from pathlib import Path
 from typing import Optional
+
+# Suporte universal de execução: raiz do repositório ou standalone dentro da pasta backend/ (ex: Docker)
+_backend_dir = Path(__file__).resolve().parent
+_parent_dir = _backend_dir.parent
+if str(_parent_dir) not in sys.path:
+    sys.path.insert(0, str(_parent_dir))
+if str(_backend_dir) not in sys.path:
+    sys.path.insert(0, str(_backend_dir))
+
+if "backend" not in sys.modules:
+    backend_pkg = types.ModuleType("backend")
+    backend_pkg.__path__ = [str(_backend_dir)]
+    sys.modules["backend"] = backend_pkg
+
 from flask import Flask, Response, request
 
 from backend.repositories.catalogo_repo import CatalogoRepository

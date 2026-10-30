@@ -6,7 +6,7 @@ Disponibiliza:
 """
 
 import os
-from flask import send_from_directory
+from flask import jsonify, send_from_directory
 from backend.app import create_api_app
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend")
@@ -18,6 +18,13 @@ app = create_api_app()
 @app.route("/<path:path>")
 def serve_frontend(path: str):
     """Serve a aplicação frontend desacoplada."""
+    # Garante que requisições de API não correspondidas retornem JSON 404, e não o HTML da SPA
+    if path.startswith("api/") or path == "api":
+        return jsonify({
+            "error": f"Endpoint '/{path}' não encontrado.",
+            "status": 404,
+        }), 404
+
     if os.path.exists(os.path.join(FRONTEND_DIR, path)):
         return send_from_directory(FRONTEND_DIR, path)
     return send_from_directory(FRONTEND_DIR, "index.html")

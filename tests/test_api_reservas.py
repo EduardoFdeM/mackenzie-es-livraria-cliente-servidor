@@ -61,8 +61,20 @@ def test_api_criar_reserva_sem_estoque_retorna_409(client):
 
 
 def test_api_criar_reserva_dados_invalidos_retorna_400(client):
-    res = client.post("/api/v1/reservas", json={"isbn": "123"})
-    assert res.status_code == 400
+    # Faltando campos
+    res_incompleto = client.post("/api/v1/reservas", json={"isbn": "123"})
+    assert res_incompleto.status_code == 400
+    assert res_incompleto.get_json()["status"] == 400
+
+    # Payload como lista (não objeto dict)
+    res_lista = client.post("/api/v1/reservas", json=[1, 2, 3])
+    assert res_lista.status_code == 400
+    assert res_lista.get_json()["status"] == 400
+
+    # Payload vazio
+    res_vazio = client.post("/api/v1/reservas", json={})
+    assert res_vazio.status_code == 400
+    assert res_vazio.get_json()["status"] == 400
 
 
 def test_api_cancelar_reserva_dupla_retorna_409(client):

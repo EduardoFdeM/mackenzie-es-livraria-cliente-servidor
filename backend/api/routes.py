@@ -59,7 +59,13 @@ def obter_reserva(codigo: str):
 @api_bp.route("/reservas", methods=["POST"])
 def criar_reserva():
     service = current_app.config["RESERVA_SERVICE"]
-    payload = request.get_json(silent=True) or request.form
+    raw_json = request.get_json(silent=True)
+    if raw_json is not None:
+        if not isinstance(raw_json, dict):
+            raise DadosInvalidosError("Corpo da requisição deve ser um objeto JSON contendo 'isbn' e 'unidade'.")
+        payload = raw_json
+    else:
+        payload = request.form
 
     if not payload:
         raise DadosInvalidosError("Corpo da requisição deve ser JSON estruturado contendo 'isbn' e 'unidade'.")

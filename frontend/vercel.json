@@ -3,6 +3,7 @@
   "name": "livraria-mackenzie-frontend",
   "cleanUrls": true,
   "routes": [
+    { "handle": "filesystem" },
     {
       "src": "/(.*)",
       "dest": "/index.html"
