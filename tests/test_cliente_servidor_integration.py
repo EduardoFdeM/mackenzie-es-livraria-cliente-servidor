@@ -47,3 +47,43 @@ def test_standalone_backend_module_import():
     from backend.app import create_api_app
     app_standalone = create_api_app()
     assert app_standalone is not None
+
+
+def test_modo_servidor_backend_exclusivo(monkeypatch):
+    monkeypatch.setenv("APP_MODE", "backend")
+    import importlib
+    import app as app_module
+    importlib.reload(app_module)
+    backend_client = app_module.app.test_client()
+
+    # Rota raiz retorna dados da API REST em JSON, não HTML
+    res_root = backend_client.get("/")
+    assert res_root.status_code == 200
+    assert res_root.content_type == "application/json"
+    data = res_root.get_json()
+    assert "REST API" in data["service"]
+
+    # Endpoints de API funcionam
+    res_api = backend_client.get("/api/v1/livros")
+    assert res_api.status_code == 200
+    assert "data" in res_api.get_json()
+
+
+def test_modo_servidor_frontend_exclusivo(monkeypatch):
+    monkeypatch.setenv("APP_MODE", "frontend")
+    import importlib
+    import app as app_module
+    importlib.reload(app_module)
+    frontend_client = app_module.app.test_client()
+
+    # Rota raiz entrega o HTML SPA
+    res_root = frontend_client.get("/")
+    assert res_root.status_code == 200
+    assert "Livraria Mackenzie" in res_root.text
+
+    # Chamada para /api/v1/* retorna 404 informando que é só front
+    res_api = frontend_client.get("/api/v1/livros")
+    assert res_api.status_code == 404
+    data = res_api.get_json()
+    assert "Front-end SPA" in data["error"]
+
