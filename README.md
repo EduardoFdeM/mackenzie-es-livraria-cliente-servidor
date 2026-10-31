@@ -174,8 +174,44 @@ Testa todos os endpoints da API, requisições CORS, preflight OPTIONS, códigos
 
 ## 7. Instruções de Deploy (Exercício 8.6)
 
-O arquivo `render.yaml` já está preparado com a declaração de **ambos os serviços**:
+### Opção A — Azure for Students (Tier Grátis F1 + Static Web Apps)
 
+O exercício 8.6 solicita dois links: **Link para o front-end** e **Link para o back-end**.
+
+#### 1. Deploy do Back-end (API REST) no Azure App Service
+1. Acesse o [Portal da Azure](https://portal.azure.com) com a conta institucional Mackenzie.
+2. Crie um novo **Aplicativo Web (App Service)**:
+   - **Assinatura**: *Azure for Students*
+   - **Grupo de Recursos**: `rg-mackenzie-es`
+   - **Nome**: `mack-livraria-api-seu-nome` (URL: `https://mack-livraria-api-seu-nome.azurewebsites.net`)
+   - **Publicar**: Código | **Pilha de runtime**: Python 3.12 (ou 3.11) | **SO**: Linux
+   - **Região**: `East US` (Leste dos EUA)
+   - **Plano de Preços**: Selecione **Gratuito F1** (1 GB memória, 0 BRL/mês)
+3. Na aba **Implantação (Deployment)**:
+   - Conecte sua conta GitHub `EduardoFdeM`, selecione o repositório `mackenzie-es-livraria-cliente-servidor` e o branch `main`.
+4. Conclua a criação.
+   - **Link de entrega do Back-end**: `https://<seu-app>.azurewebsites.net` (ou `https://<seu-app>.azurewebsites.net/api/v1/health`)
+
+#### 2. Deploy do Front-end (SPA) no Azure Static Web Apps
+1. No Azure Portal, pesquise por **Aplicativos Web Estáticos (Static Web Apps)** e clique em **Criar**.
+2. Preencha:
+   - **Assinatura**: *Azure for Students* | **Grupo**: `rg-mackenzie-es`
+   - **Nome**: `mack-livraria-front-seu-nome`
+   - **Plano**: **Gratuito (Free)**
+   - **Região**: `East US 2`
+3. Em **Origem da Implantação**:
+   - Conecte o GitHub, selecione o repositório `mackenzie-es-livraria-cliente-servidor` e o branch `main`.
+   - **Predefinições de compilação**: Escolha `Custom` (Personalizado).
+   - **Local do aplicativo (App location)**: Digite `frontend`
+   - **Local da saída (Output location)**: Deixe vazio (ou `.`)
+4. Clique em **Revisar + Criar**.
+   - O Azure criará automaticamente o workflow no GitHub e fornecerá um link HTTPS com CDN global (ex.: `https://proud-ocean-xxx.azurestaticapps.net`).
+   - Ao abrir o front-end, basta colar a URL do seu backend no topo da página para conectar os dois serviços!
+   - **Link de entrega do Front-end**: `https://<seu-static-app>.azurestaticapps.net`
+
+---
+
+### Opção B — Render & Vercel
 1. **Deploy no Render (Backend + Frontend)**:
    - Conecte o repositório no Render através de **Blueprints**.
    - O Render criará automaticamente:
