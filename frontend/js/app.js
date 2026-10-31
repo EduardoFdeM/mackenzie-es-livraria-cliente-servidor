@@ -4,9 +4,14 @@
  */
 
 // Configuração da URL base da API
+const PRODUCTION_BACKEND_URL = "https://mack-livraria-api-eduardo-g8a4czche9babbbt.brazilsouth-01.azurewebsites.net/api/v1";
+
 const STORAGE_KEY_API = "MACKENZIE_LIVRARIA_API_URL";
 let API_BASE_URL = localStorage.getItem(STORAGE_KEY_API) || (
-    window.location.origin.includes("http") ? `${window.location.origin}/api/v1` : "http://localhost:5000/api/v1"
+    // Se estiver em localhost/dev local usa a porta local, senão aponta automaticamente para a API de produção da Azure
+    window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+        ? (window.location.origin.includes("http") ? `${window.location.origin}/api/v1` : "http://localhost:5000/api/v1")
+        : PRODUCTION_BACKEND_URL
 );
 
 // Estado da Aplicação
