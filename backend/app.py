@@ -24,8 +24,10 @@ from flask import Flask, Response, request
 from backend.repositories.catalogo_repo import CatalogoRepository
 from backend.repositories.estoque_repo import EstoqueRepository
 from backend.repositories.reserva_repo import ReservaRepository
+from backend.repositories.usuario_repo import UsuarioRepository
 from backend.services.livraria_service import LivrariaService
 from backend.services.reserva_service import ReservaService
+from backend.services.usuario_service import UsuarioService
 from backend.api.routes import api_bp
 from backend.api.error_handlers import register_error_handlers
 
@@ -34,6 +36,7 @@ def create_api_app(
     catalogo_repo: Optional[CatalogoRepository] = None,
     estoque_repo: Optional[EstoqueRepository] = None,
     reserva_repo: Optional[ReservaRepository] = None,
+    usuario_repo: Optional[UsuarioRepository] = None,
 ) -> Flask:
     app = Flask(__name__)
     app.config["JSON_AS_ASCII"] = False
@@ -42,13 +45,16 @@ def create_api_app(
     c_repo = catalogo_repo or CatalogoRepository()
     e_repo = estoque_repo or EstoqueRepository()
     r_repo = reserva_repo or ReservaRepository()
+    u_repo = usuario_repo or UsuarioRepository()
 
     app.config["CATALOGO_REPO"] = c_repo
     app.config["ESTOQUE_REPO"] = e_repo
     app.config["RESERVA_REPO"] = r_repo
+    app.config["USUARIO_REPO"] = u_repo
 
     app.config["LIVRARIA_SERVICE"] = LivrariaService(c_repo, e_repo)
     app.config["RESERVA_SERVICE"] = ReservaService(r_repo, c_repo, e_repo)
+    app.config["USUARIO_SERVICE"] = UsuarioService(u_repo)
 
     # Configuração nativa de CORS para clientes web desacoplados (SPAs)
     @app.after_request

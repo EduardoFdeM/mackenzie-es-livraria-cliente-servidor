@@ -91,3 +91,91 @@ def cancelar_reserva(codigo: str):
         "message": f"Reserva {reserva['codigo']} cancelada com sucesso! Exemplar devolvido ao estoque da unidade {reserva['unidade']}.",
         "data": reserva,
     }), 200
+
+
+# -------------------------------------------------------------
+# Exercício 10.2: Endpoints REST de Usuários (SQL PostgreSQL)
+# -------------------------------------------------------------
+
+@api_bp.route("/usuarios", methods=["GET"])
+def listar_usuarios():
+    service = current_app.config.get("USUARIO_SERVICE")
+    if not service:
+        return jsonify({"error": "Serviço de usuários não configurado."}), 500
+    usuarios = [u.to_dict() for u in service.listar_usuarios()]
+    return jsonify({
+        "data": usuarios,
+        "count": len(usuarios),
+        "database": "SQL PostgreSQL (Usuários)",
+    }), 200
+
+
+@api_bp.route("/usuarios/<identificador>", methods=["GET"])
+def obter_usuario(identificador: str):
+    service = current_app.config.get("USUARIO_SERVICE")
+    if not service:
+        return jsonify({"error": "Serviço de usuários não configurado."}), 500
+    usuario = service.obter_usuario_por_id_ou_tia(identificador)
+    if not usuario:
+        return jsonify({"error": f"Usuário '{identificador}' não encontrado."}), 404
+    return jsonify({"data": usuario.to_dict()}), 200
+
+
+@api_bp.route("/usuarios", methods=["POST"])
+def criar_usuario():
+    service = current_app.config.get("USUARIO_SERVICE")
+    if not service:
+        return jsonify({"error": "Serviço de usuários não configurado."}), 500
+    dados = request.get_json(silent=True)
+    if not dados or not isinstance(dados, dict):
+        raise DadosInvalidosError("Envie um payload JSON contendo 'nome', 'email' e 'tia'.")
+
+    nome = dados.get("nome")
+    email = dados.get("email")
+    tia = dados.get("tia")
+    tipo = dados.get("tipo", "Aluno")
+
+    if not nome or not email or not tia:
+        raise DadosInvalidosError("Os campos 'nome', 'email' e 'tia' são obrigatórios.")
+
+    try:
+        usuario = service.cadastrar_usuario(str(nome), str(email), str(tia), str(tipo))
+        return jsonify({
+            "message": f"Usuário {usuario.nome} (TIA: {usuario.tia}) cadastrado com sucesso!",
+            "data": usuario.to_dict(),
+        }), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+
+
+# -------------------------------------------------------------
+# Status dos Bancos de Dados (Laboratório 10 - NoSQL e SQL)
+# -------------------------------------------------------------
+
+@api_bp.route("/database/status", methods=["GET"])
+def status_bancos():
+    catalogo_repo = current_app.config["CATALOGO_REPO"]
+    usuario_repo = current_app.config.get("USUARIO_REPO")
+
+    total_livros = len(catalogo_repo.listar_todos())
+    total_usuarios = len(usuario_repo.listar_todos()) if usuario_repo else 0
+
+    return jsonify({
+        "status": "online",
+        "laboratorio": "Laboratório 10 - Bancos de Dados em Arquitetura de Software",
+        "nosql_database": {
+            "tipo": "Azure Cosmos DB for MongoDB (NoSQL)",
+            "finalidade": "Catálogo de Livros (Exercício 10.1)",
+            "conexao": getattr(catalogo_repo, "tipo_banco", "Ativo"),
+            "total_livros_cadastrados": total_livros,
+            "status_requisito_10_livros": "Aprovado (>= 10)" if total_livros >= 10 else "Pendente",
+        },
+        "sql_database": {
+            "tipo": "Azure Database for PostgreSQL (SQL)",
+            "finalidade": "Registro de Informações de Usuários (Exercício 10.2)",
+            "conexao": getattr(usuario_repo, "tipo_banco", "Ativo") if usuario_repo else "N/A",
+            "total_usuarios_cadastrados": total_usuarios,
+            "status_requisito_4_usuarios": "Aprovado (>= 4)" if total_usuarios >= 4 else "Pendente",
+        }
+    }), 200
+

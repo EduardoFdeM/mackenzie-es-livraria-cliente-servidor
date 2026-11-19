@@ -90,3 +90,24 @@ class Reserva:
             "unidade": self.unidade,
             "status": self.status.value,
         }
+
+
+@dataclass
+class Usuario:
+    id: int
+    nome: str
+    email: str
+    tia: str
+    tipo: str  # Aluno, Professor, Bibliotecário
+    ativo: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "nome": self.nome,
+            "email": self.email,
+            "tia": self.tia,
+            "tipo": self.tipo,
+            "ativo": self.ativo,
+        }
+

@@ -52,9 +52,13 @@ A solução separa claramente as responsabilidades de cliente e servidor atravé
 | Método | Endpoint | Descrição | Status Sucesso | Status Erro |
 |---|---|---|---|---|
 | `GET` | `/api/v1/health` | Health check da API | `200 OK` | - |
-| `GET` | `/api/v1/livros` | Lista todos os livros ou filtra por `?q=termo` | `200 OK` | - |
+| `GET` | `/api/v1/database/status` | Auditoria dos Bancos NoSQL (Cosmos DB) e SQL (PostgreSQL) | `200 OK` | - |
+| `GET` | `/api/v1/livros` | Lista todos os livros (**NoSQL Cosmos DB - 10+ livros**) ou filtra por `?q=termo` | `200 OK` | - |
 | `GET` | `/api/v1/livros/<isbn>` | Detalhes do livro e filiais | `200 OK` | `404 Not Found` |
 | `GET` | `/api/v1/livros/<isbn>/estoque` | Consulta saldo e localização por filial | `200 OK` | `404 Not Found` |
+| `GET` | `/api/v1/usuarios` | Lista todos os usuários cadastrados (**SQL PostgreSQL - 4+ usuários**) | `200 OK` | - |
+| `GET` | `/api/v1/usuarios/<id_ou_tia>` | Consulta usuário por ID sequencial ou TIA Mackenzie | `200 OK` | `404 Not Found` |
+| `POST` | `/api/v1/usuarios` | Cadastra novo usuário (`{"nome": "...", "email": "...", "tia": "...", "tipo": "..."}`) | `201 Created` | `400 / 409` |
 | `GET` | `/api/v1/reservas` | Lista todas as reservas | `200 OK` | - |
 | `GET` | `/api/v1/reservas/<codigo>` | Consulta dados de uma reserva | `200 OK` | `404 Not Found` |
 | `POST` | `/api/v1/reservas` | Cria uma reserva (`{"isbn": "...", "unidade": "..."}`) | `201 Created` | `400 / 409` |
@@ -222,3 +226,32 @@ O exercício 8.6 solicita dois links: **Link para o front-end** e **Link para o 
    - Configure **Root Directory** como `frontend`.
    - A Vercel utilizará o arquivo `frontend/vercel.json` e fornecerá uma URL pública (ex.: `https://livraria-mackenzie.vercel.app`).
    - No topo do frontend, basta colar a URL do seu backend no campo **Servidor Backend (REST API)** e clicar em **Conectar**.
+
+---
+
+## 5. Laboratório 10 — Bancos de Dados em Arquitetura (NoSQL e SQL)
+
+Nesta etapa, o MVP da livraria foi atualizado com persistência híbrida poliglota (**Polyglot Persistence**):
+
+### 10.1 — Banco de Dados NoSQL (Azure Cosmos DB for MongoDB)
+* **Domínio:** Catálogo de Livros flexível em documentos JSON.
+* **Requisito Atendido:** Mínimo de 10 livros cadastrados (atualmente **10 livros técnicos clássicos** com ISBN, título, autor e preço formatado).
+* **Camada:** `backend/repositories/catalogo_repo.py` implementa conexão com Azure Cosmos DB for MongoDB via `pymongo` (com variável `COSMOS_MONGODB_URI` ou fallback resiliente em memória).
+* **Endpoint de Catálogo:** `GET /api/v1/livros` e `GET /api/v1/livros/<isbn>`.
+
+### 10.2 — Banco de Dados SQL (Azure Database for PostgreSQL)
+* **Domínio:** Registro relacional de usuários do sistema.
+* **Requisito Atendido:** Mínimo de 4 usuários cadastrados (cadastrados: aluno Eduardo Ferreira de Mattos TIA 10402800, Prof. Dr. Rodrigo Juliani, Aluna Ana Paula e Bibliotecário Carlos Alberto).
+* **Camada:** `backend/domain/models.py` (entidade `Usuario`), `backend/repositories/usuario_repo.py` (tabela relacional com suporte a `psycopg2` e fallback local), `backend/services/usuario_service.py`.
+* **Endpoints de Usuários:**
+  * `GET /api/v1/usuarios`: Lista os usuários cadastrados.
+  * `GET /api/v1/usuarios/<id_ou_tia>`: Detalhes de um usuário por ID ou TIA.
+  * `POST /api/v1/usuarios`: Criação de novo usuário.
+
+### Auditoria e Validação Online
+* **Endpoint de Status:** `GET /api/v1/database/status`
+* **Testes Automatizados:** `pytest tests/test_laboratorio10_bancos.py -v` (100% aprovado).
+* **Deploy Online (Azure App Service):**
+  * Backend API: `https://mack-livraria-api-eduardo-g8a4czche9babbbt.brazilsouth-01.azurewebsites.net/api/v1/health`
+  * Frontend SPA: `https://mack-livraria-front-eduardo-e9bqh5drdnhthdc0.brazilsouth-01.azurewebsites.net/`
+
